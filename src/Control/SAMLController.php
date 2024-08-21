@@ -65,6 +65,7 @@ class SAMLController extends Controller
      */
     public function acs()
     {
+        $this->getLogger()->info('acs started');
         /** @var Auth $auth */
         $auth = Injector::inst()->get(SAMLHelper::class)->getSAMLAuth();
         $caughtException = null;
@@ -222,7 +223,9 @@ class SAMLController extends Controller
 
         /** @var IdentityStore $identityStore */
         $identityStore = Injector::inst()->get(IdentityStore::class);
-        $identityStore->logIn($member, false, $this->getRequest());
+        $identityStore->logIn($member, true, $this->getRequest());
+        $this->getLogger()->info('acs user successfully logged in');
+        $this->getLogger()->info('acs user successfully logged in session '. json_encode($this->getRequest()->getSession()->getAll()));
 
         return $this->getRedirect();
     }
@@ -262,7 +265,8 @@ class SAMLController extends Controller
     {
         // Absolute redirection URLs may cause spoofing
         $back = $this->getRequest()->getSession()->get('BackURL');
-
+        $this->getLogger()->info('back url'. $back);
+        
         if ($back && Director::is_site_url($back)) {
             return $this->redirect($this->getRequest()->getSession()->get('BackURL'));
         }
@@ -274,6 +278,8 @@ class SAMLController extends Controller
         // as in https://github.com/SAML-Toolkits/php-saml#avoiding-open-redirect-attacks
         $relayState = $this->owner->getRequest()->postVar('RelayState');
         if ($relayState && Director::is_site_url($relayState)) {
+            $this->getLogger()->info('RelayState redirect');
+
             return $this->redirect($relayState);
         }
 
